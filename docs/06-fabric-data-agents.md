@@ -16,7 +16,7 @@ Once published, a Data Agent can be consumed as:
 - Microsoft Entra ID tenant
 - Oracle AI Database@Azure instance with Private Endpoints configured
 - On-Prem Data Gateway on Azure VM or On-Premise VM for Microsoft Fabric Native Mirroring
-- Fabric workspace with Managed VNET enabled (for private mirroring)
+- Fabric workspace (optional - Managed VNET enabled for private mirroring)
 - Dedicated read-only Oracle user for mirroring
 
 ## Setup Steps
