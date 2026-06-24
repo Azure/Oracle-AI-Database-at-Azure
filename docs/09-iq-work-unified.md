@@ -1,6 +1,6 @@
 # Microsoft IQ on Oracle Data -- Fabric IQ, Foundry IQ, Work IQ, Web IQ, and A365 Control Plane
 
-<img width="696" height="321" alt="image" src="https://github.com/user-attachments/assets/04946a55-1752-45d1-a121-47a620111e53" />
+<img width="1536" height="1024" alt="Designer (20)" src="https://github.com/user-attachments/assets/25d67d05-8363-46a6-a437-ba0d3cf82681" />
 
 ## Overview -- Microsoft IQ and Oracle AI Database@Azure
 
