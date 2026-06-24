@@ -149,7 +149,6 @@ Oracle data is replicated into Microsoft Fabric via two paths: Fabric native mir
 
 > **References:**
 > - [Replicate data from Oracle to Microsoft Fabric Lakehouse](https://docs.oracle.com/en/cloud/paas/goldengate-service/raipm/)
-> - [Replicate data from Oracle to Microsoft Fabric Mirror](https://docs.oracle.com/en/cloud/paas/goldengate-service/rarpm/)
 
 ### AI Enrichment: IQ -- Intelligent Data Processing
 
