@@ -430,7 +430,7 @@ graph TB
     - Go through the "General", "Security", "Definition", "Code" and "Test" tabs to make sure your OpenAPI file was imported correctly. Make any necessary changes in the setup in case there were mistakes.
     - Once all sections are validated, you will click on "Create connector". For more guidance on setting up your connector find information [here.](https://learn.microsoft.com/en-us/connectors/custom-connectors/)
     - Go back to your Copilot Studio agent,  select "Tools" → "Add a tool" → search for your connector name. The different actions defined in the OpenAPI file should surface now.
-    - Once you add and configure your tool, make sure to add a strong description of what the tool does, this allows the orchestrator to know when to call your tool
+    - Once you add and configure your tool, make sure to add a strong description of what the tool does, this allows the orchestrator to know when to call your tool.
     - You can now test your tool by using the test chat window in the Copilot Studio platform.
   
 
