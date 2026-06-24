@@ -127,7 +127,7 @@ This playbook is organized into modular documents under the [`docs/`](docs/) fol
 
 We'd love to see you contributing to our repo and engaging with the experts with your questions!
 
-- 🤔 Do you have suggestions or have you found spelling or code errors? [Raise an issue](https://github.com/OracleAIDatabase-Azure/Oracle-AI-Database-at-Azure/issues) or [Create a pull request](https://github.com/OracleAIDatabase-Azure/Oracle-AI-Database-at-Azure/pulls).
+- 🤔 Do you have suggestions or have you found spelling or functional errors? [Raise an issue](https://github.com/OracleAIDatabase-Azure/Oracle-AI-Database-at-Azure/issues) or [Create a pull request](https://github.com/OracleAIDatabase-Azure/Oracle-AI-Database-at-Azure/pulls).
 - 🚀 If you get stuck or have any questions, ask them in our [Discussions](https://github.com/OracleAIDatabase-Azure/Oracle-AI-Database-at-Azure/discussions).
 - Check out [Contributing](CONTRIBUTING.md) & [Trademarks](TRADEMARKS.md) details.
 
