@@ -118,8 +118,7 @@ This playbook is organized into modular documents under the [`docs/`](docs/) fol
 | 7 | Logic Apps + Oracle | [08-logic-apps.md](docs/08-logic-apps.md) | Integration / Devs |
 | 8 | Microsoft IQ Layers  | [09-iq-work-unified.md](docs/09-iq-work-unified.md) | Architects / Devs |
 | 9 | Security & Governance Guardrails | [10-security-governance.md](docs/10-security-governance.md) | All |
-| 10 | Appendix — Resources & References | [12-appendix.md](docs/12-appendix.md) | All |
-| 12 | Step-by-Step Implementation Guides  | ***(coming soon)*** | Devs / Partners |
+| 10 | Step-by-Step Implementation Guides  | ***Coming soon*** | Devs / Partners |
 
 ---
 
