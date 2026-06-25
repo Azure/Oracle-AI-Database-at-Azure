@@ -119,6 +119,3 @@ graph TD
 | 10 | Network segmentation (NSGs) | Yes | Agent services in separate subnet |
 | 11 | Encryption at rest and in transit | Yes | TLS 1.2+ for all connections; Oracle TDE |
 
-## Key Principle
-
-> **MCP does not bypass Oracle security -- it operates inside it.** Every SQL statement executed via MCP runs under the connected Oracle user's privileges, subject to Oracle's standard authentication, authorization, auditing, and VPD policies.
