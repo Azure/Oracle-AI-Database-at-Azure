@@ -1,7 +1,7 @@
 # Reference Architecture Patterns
 
 Blueprints are organized into three categories based on how Oracle data flows into the Microsoft AI ecosystem.
-Platforms used are **Microsoft Foundry, Copilot Studio, Power Apps, Logic apps** for workflows 
+Platforms used are **Microsoft Foundry, Copilot Studio, Power Apps, Logic Apps** for workflows.
 
 --
 
@@ -11,11 +11,13 @@ Agents query Oracle data directly running on Oracle AI Database@Azure at runtime
 
 | Blueprint | AI Platform | How It Connects | Surfaces | Value Proposition |
 |--|--|--|--|--|
-| **1** | **Copilot Studio** | Gateway / Oracle as Knowledge / Oracle as Tool | Teams, Web, M365 | - Fastest time-to-value (hours)<br/>- No-code builder<br/>- Business users self-serve answers<br/>- Zero data movement |
-| **2** | **MS Foundry** | Agent Framework: Oracle MCP server (hosted on Azure Functions / Azure Container Apps) + ORDS APIs; Knowledge Base (Blob, SharePoint, Fabric Files); Oracle 26ai vectors | API, M365 Copilot, Agent Store | - Full model & tool control<br/>- Multi-agent orchestration<br/>- Production-grade custom AI apps<br/>- Live Oracle data, no migration<br/>- Publish to M365 + Agent Store |
-| **3** | **Oracle MCP** (developer) | SQLcl MCP in VS Code or hosted | VS Code, Foundry, Copilot Studio | - Natural language --> SQL in minutes<br/>- Zero infrastructure to start<br/>- Schema discovery on demand<br/>- DBA task automation |
-| **4** | **Power Apps** | Gateway / Oracle Connector | Power Platform | - Modernize workflows without rebuilding<br/>- AI Builder for forms & predictions<br/>- Citizen developer friendly<br/>- Incremental AI adoption |
-| **5** | **Logic Apps** | Oracle DB Connector (Gateway) / ORDS REST (via HTTP + APIM) | Workflow orchestration, enterprise integration | - Event-driven automation<br/>- 400+ enterprise connectors<br/>- No custom code needed<br/>- Orchestrate Oracle + SaaS + Azure |
+| **1** | **Copilot Studio** | Oracle Connector (Knowledge/Tool), Oracle MCP, or ORDS + Custom Connector | Teams, Web, M365 | - Fastest time-to-value (hours)<br/>- No-code builder<br/>- Business users self-serve answers<br/>- Zero data movement |
+| **2** | **MS Foundry + MCP** | Foundry agent + Oracle MCP server hosted on Azure Functions/Container Apps | API, M365 Copilot, Agent Store | - NL --> SQL with live Oracle data<br/>- Strong security and private networking<br/>- Production-grade custom AI apps |
+| **3** | **MS Foundry + ORDS** | Foundry agent + ORDS OpenAPI tools through APIM | API, M365 Copilot, Agent Store | - Governed REST-based integration<br/>- Native Oracle 26ai vector search (RAG)<br/>- OAuth2 + rate limiting at APIM |
+| **4** | **MS Foundry + MCP + ORDS + Foundry IQ** | Full-stack tool orchestration with structured + unstructured grounding | API, M365 Copilot, Agent Store | - Combines live SQL, governed APIs, and document knowledge<br/>- Best fit for enterprise multi-tool agents |
+| **5** | **Oracle MCP** | SQLcl MCP in VS Code or hosted MCP on Azure | VS Code, Foundry, Copilot Studio | - Natural language --> SQL in minutes<br/>- Zero infrastructure to start locally<br/>- Developer productivity and hosted scale options |
+| **6** | **Power Apps** | Oracle Connector + On-Premises Data Gateway | Power Platform | - Modernize workflows without rebuilding<br/>- AI Builder for forms and enrichment<br/>- Citizen-developer friendly |
+| **7** | **Logic Apps** | Oracle DB Connector (managed/built-in) or ORDS REST via HTTP + APIM | Workflow orchestration, enterprise integration | - Event-driven automation<br/>- 400+ enterprise connectors<br/>- Orchestrate Oracle + SaaS + Azure |
 
 --
 
@@ -36,6 +38,15 @@ graph TB
  C["Oracle Connector"]
  K["Oracle as Knowledge<br/>Grounds on tables,<br/>views, data"]
  T["Oracle as Tool<br/>Connector actions<br/>called during chat"]
+ subgraph OBS["Observability"]
+ AN["Analytics / DAU / Sessions"]
+ DV["Dataverse Transcripts"]
+ end
+ end
+
+ subgraph GOV["Governance"]
+ A365["Agent 365<br/>Approve / Publish / Deploy"]
+ PURVIEW["Microsoft Purview<br/>Data Map + Catalog"]
  end
 
  subgraph VNET["Azure VNET"]
@@ -60,6 +71,8 @@ graph TB
  T -->|Azure Relay<br/>HTTPS 443| GATEWAY
  GATEWAY -->|Port 1521<br/>Private Endpoint| PE
  PE --> DB
+ COP -.->|Publish request| A365
+ PURVIEW -.->|Classify| DB
 ```
 Azure Relay is the service that the On-Premises Data Gateway uses to communicate with cloud services like Copilot Studio. This is already how the On-Premises Data Gateway works by default -- you don't configure Azure Relay separately. It's built into the gateway installer.
 
@@ -588,7 +601,33 @@ graph LR
  LA --> OUT
 ```
 
-#### Option B: ORDS via HTTP + APIM (Recommended)
+#### Option B: Oracle DB Connector (Built-in, Standard only, preview)
+
+```mermaid
+graph LR
+ subgraph Trigger["Trigger"]
+ TRIG["Schedule / HTTP /<br/>Event Grid /<br/>Service Bus"]
+ end
+
+ subgraph LogicApp["Azure Logic Apps"]
+ LA["Logic App<br/>(Standard)"]
+ BUILTIN["Oracle DB Connector<br/>(built-in, in-process)"]
+ AI["Azure OpenAI<br/>Action"]
+ OUT["Output:<br/>Teams / Email /<br/>Dynamics / SAP"]
+ end
+
+ subgraph ODA["Oracle AI Database@Azure"]
+ DB[("Oracle 26ai DB<br/>No Public IP")]
+ end
+
+ TRIG --> LA
+ LA --> BUILTIN
+ BUILTIN -->|Direct VNET path| DB
+ LA --> AI
+ LA --> OUT
+```
+
+#### Option C: ORDS via HTTP + APIM (Recommended)
 
 ```mermaid
 graph LR
@@ -640,7 +679,7 @@ graph LR
  DB -.->|"Unified Audit"| LANA
 ```
 
-> **Option B is recommended** -- ORDS runs natively on Oracle 26ai (no gateway infrastructure), APIM enforces OAuth2 + rate limiting, Logic App Standard provides VNET integration for fully private connectivity; supports vector search endpoints. See [Blueprint 7 -- Logic Apps](08-logic-apps.md) for detailed setup, NSG rules, and workflow patterns.
+> **Option C is recommended** -- ORDS runs natively on Oracle 26ai (no gateway infrastructure), APIM enforces OAuth2 + rate limiting, Logic App Standard provides VNET integration for fully private connectivity, and supports vector search endpoints. See [Blueprint 7 -- Logic Apps](08-logic-apps.md) for detailed setup, NSG rules, and workflow patterns.
 
 --
 
@@ -654,7 +693,7 @@ Oracle data is replicated into Microsoft Fabric via Mirrored Database for analyt
 | **Blueprint 8** | **Mirrored Database + Data Agents** | Oracle --> Fabric Mirroring --> Mirrored Database --> Data Agents --> Published as MCP Server / Teams / Copilot Studio / Foundry | Teams, Copilot Studio, Foundry, MCP clients | - Natural language analytics on mirrored Oracle data<br/>- Data Agent as MCP server for any MCP client<br/>- Publish directly to Teams<br/>- Connect to Copilot Studio or Foundry via native connectors<br/>- Cross-source joins<br/>- Entra ID + private networking |
 | **Blueprint 8B** | **GoldenGate as a Service + Fabric** | Oracle AI Database@Azure --> OCI GoldenGate (CDC) --> Fabric Lakehouse or Fabric Mirror --> Data Agents / Fabric IQ | Fabric, Teams, Copilot Studio, Foundry, MCP clients | - Real-time CDC replication (sub-second latency)<br/>- Supports Fabric Lakehouse AND Fabric Mirror as targets<br/>- Data transformations during replication<br/>- 30+ source/target combinations<br/>- Enterprise-grade with conflict detection |
 | **Blueprint 9** | **Fabric Mirroring + Foundry** | Mirrored Database --> Data Agents --> Foundry agents (via native connector) | API, M365 Copilot, Agent Store | - AI agents grounded in curated analytics<br/>- Data Agent feeds Foundry as a tool<br/>- Best of Fabric + Foundry<br/>- Governed data layer<br/>- Publish insights to M365 Copilot |
-| **Blueprint 10: Fabric Mirroring + Data Agents + Copilot Studio** | **Fabric Mirroring + Copilot Studio** | Mirrored Database --> Data Agents --> Copilot Studio custom copilots (via native connector) | Teams, Web, M365 Copilot | - Copilots grounded on mirrored Oracle analytics<br/>- Data Agent feeds Copilot Studio as a connector<br/>- Best of Fabric + Copilot Studio<br/>- No-code copilot builder<br/>- Publish to Teams and M365 Copilot |
+| **Blueprint 10** | **Fabric Mirroring + Copilot Studio** | Mirrored Database --> Data Agents --> Copilot Studio custom copilots (via native connector) | Teams, Web, M365 Copilot | - Copilots grounded on mirrored Oracle analytics<br/>- Data Agent feeds Copilot Studio as a connector<br/>- Best of Fabric + Copilot Studio<br/>- No-code copilot builder<br/>- Publish to Teams and M365 Copilot |
 
 --
 
@@ -670,6 +709,9 @@ graph TB
  subgraph VNET["Azure VNET"]
  subgraph PESub["Private Endpoint Subnet"]
  PE_ORA["Oracle<br/>Private Endpoint"]
+ end
+ subgraph OPDGSub["On-Prem Data Gateway Subnet"]
+ OPDG["On-Prem<br/>Data Gateway"]
  end
  subgraph FabricSub["Fabric Managed VNET"]
  FGWY["Fabric Managed<br/>Private Endpoint<br/>to Oracle"]
@@ -701,7 +743,9 @@ graph TB
 
  AUTH --> DA
  RBAC_E --> DA
- DB -->|Private Endpoint| FGWY
+ DB --> PE_ORA
+ PE_ORA --> OPDG
+ OPDG --> FGWY
  FGWY --> MIRROR
  MIRROR --> MDB
  MDB --> DA
@@ -958,29 +1002,81 @@ AI-powered intelligence layers that process, enrich, and surface insights from s
 | **Blueprint 11** | **Fabric IQ** | AI-powered analytics and insights over data in OneLake (mirrored Oracle + other sources) | Fabric, Data Agents | - Automated insight discovery<br/>- AI finds blueprints humans miss<br/>- Multi-source data intelligence<br/>- Scales with Fabric capacity |
 | **Blueprint 12** | **Foundry IQ** | Unstructured data processing -- ingests docs from Blob, SharePoint, Fabric Files to ground Foundry agents | Foundry, M365 Copilot | - Unlock PDFs, docs, emails<br/>- Combine unstructured + structured Oracle data<br/>- Single agent, full context<br/>- Enterprise-grade grounding |
 | **Blueprint 13** | **Work IQ** | AI-driven productivity insights across M365 work blueprints connected to Oracle business data | M365, Copilot | - Bridge work signals + business data<br/>- Meeting, email, doc intelligence<br/>- Organizational productivity insights<br/>- Connected to Oracle context |
-| **Blueprint 14** | **Unified IQ** | All IQ layers combined -- Fabric IQ + Foundry IQ + Work IQ feeding a single intelligent agent | Fabric, Foundry, M365 Copilot | - Complete organizational intelligence<br/>- Structured + unstructured + work signals<br/>- One agent, all context<br/>- Maximum AI value from Oracle investment |
+| **Blueprint 14** | **Unified IQ** | All IQ layers combined -- Fabric IQ + Foundry IQ + Work IQ + Web IQ feeding a single intelligent agent | Fabric, Foundry, M365 Copilot | - Complete organizational intelligence<br/>- Structured + unstructured + work signals + web context<br/>- One agent, all context<br/>- Maximum AI value from Oracle investment |
 
 --
 
-### Blueprint 14: Unified IQ -- All Layers Combined
+### Blueprint 11: Fabric IQ on Oracle Mirrored Database
 
 ```mermaid
 graph TB
- subgraph DataSources["Data Sources"]
- ORA[("Oracle AI Database@Azure<br/>Structured Data")]
- BLOB["Azure Blob<br/>Documents"]
- SP["SharePoint<br/>Files & Sites"]
- M365D["M365<br/>Emails, Meetings, Docs"]
+ subgraph ODA["Oracle AI Database@Azure"]
+ DB[("Oracle 26ai DB<br/>No Public IP")]
  end
 
- subgraph IQLayers["IQ Layers"]
- FIQ["Fabric IQ<br/>Analytics Intelligence"]
- FOIQ["Foundry IQ<br/>Unstructured Data Processing"]
- WIQ["Work IQ<br/>Productivity Signals"]
+ subgraph Fabric["Microsoft Fabric"]
+ MIRROR["Fabric Mirroring"]
+ MDB["Mirrored Database"]
+ SC["OneLake Shortcut"]
+ LH["Lakehouse"]
  end
 
- subgraph Agent["Unified Agent"]
- UA["Foundry Agent<br/>Full Context:<br/>Structured + Unstructured Data + Work"]
+ subgraph FabricIQ["Fabric IQ"]
+ ONT["Ontology + Graph"]
+ DA["Data Agent"]
+ OA["Operations Agent"]
+ end
+
+ subgraph Publish["Published To"]
+ TEAMS["Teams"]
+ COP["M365 Copilot"]
+ MCP_PUB["MCP Server"]
+ FOUNDRY["MS Foundry"]
+ end
+
+ subgraph Governance["Governance"]
+ A365["A365 Admin Center<br/>Agent Management + Policies"]
+ end
+
+ DB --> MIRROR
+ MIRROR --> MDB
+ MDB --> SC
+ SC --> LH
+ LH --> ONT
+ ONT --> DA
+ ONT --> OA
+ DA --> TEAMS
+ DA --> COP
+ DA --> MCP_PUB
+ DA --> FOUNDRY
+ A365 -.-> DA
+ A365 -.-> OA
+```
+
+### Blueprint 12: Foundry IQ -- Unstructured Knowledge Grounding
+
+```mermaid
+graph TB
+ subgraph Sources["Knowledge Sources"]
+ BLOB["Azure Blob"]
+ SP["SharePoint"]
+ OL["OneLake"]
+ WEB["Web"]
+ end
+
+ subgraph FoundryIQ["Foundry IQ"]
+ INGEST["Ingestion + Chunking + Embedding"]
+ KB["Unified Knowledge Base"]
+ end
+
+ subgraph Tools["Structured Data Tools"]
+ MCP_T["Oracle MCP Tool"]
+ ORDS_T["ORDS Tool"]
+ end
+
+ subgraph Agent["Microsoft Foundry Agent"]
+ FA["Foundry Agent"]
+ IQ_K["Foundry IQ Knowledge"]
  end
 
  subgraph Publish["Published To"]
@@ -989,15 +1085,133 @@ graph TB
  API["API"]
  end
 
- ORA --> FIQ
- ORA --> FOIQ
+ BLOB --> INGEST
+ SP --> INGEST
+ OL --> INGEST
+ WEB --> INGEST
+ INGEST --> KB
+ KB --> IQ_K
+ MCP_T --> FA
+ ORDS_T --> FA
+ IQ_K --> FA
+ FA --> COP
+ FA --> TEAMS
+ FA --> API
+```
+
+### Blueprint 13: Work IQ -- M365 Signals + Oracle Context
+
+```mermaid
+graph TB
+ subgraph M365["Microsoft 365 Signals"]
+ EMAIL["Email"]
+ MEET["Meetings"]
+ DOCS["Docs"]
+ TEAMS_S["Teams Activity"]
+ end
+
+ subgraph OracleData["Oracle Business Context"]
+ SALES["Sales Data"]
+ CRM["Customer Records"]
+ OPS["Operational Data"]
+ end
+
+ subgraph WorkIQ["Work IQ Processing"]
+ GRAPH_API["Microsoft Graph API"]
+ WIQ_ENGINE["Correlation + Insights"]
+ end
+
+ subgraph Agent["Foundry Agent"]
+ FA["Work + Business Context"]
+ end
+
+ subgraph Governance["A365 Control Plane"]
+ A365["Privacy Controls + Signal Policies"]
+ end
+
+ EMAIL --> GRAPH_API
+ MEET --> GRAPH_API
+ DOCS --> GRAPH_API
+ TEAMS_S --> GRAPH_API
+ GRAPH_API --> WIQ_ENGINE
+ SALES --> FA
+ CRM --> FA
+ OPS --> FA
+ WIQ_ENGINE --> FA
+ A365 -.-> WIQ_ENGINE
+```
+
+### Blueprint 14: Unified IQ -- All Layers Combined
+
+```mermaid
+graph TB
+ subgraph DataSources["Data Sources"]
+ ORA[("Oracle AI Database@Azure<br/>Live Structured Data")]
+ BLOB["Azure Blob<br/>Documents"]
+ SP["SharePoint<br/>Files & Sites"]
+ M365D["M365<br/>Emails, Meetings, Docs"]
+ WEB["Public Web<br/>News, Pages, Images, Videos"]
+ end
+
+ subgraph MirrorPath["Oracle --> Fabric --> IQ"]
+ MIRROR["Fabric Mirroring"]
+ MDB["Mirrored Database"]
+ SC["OneLake Shortcut"]
+ LH["Lakehouse"]
+ FIQ["Fabric IQ<br/>Ontology + Graph + Data Agent"]
+ end
+
+ subgraph IQLayers["IQ Layers"]
+ FOIQ["Foundry IQ<br/>Knowledge Base"]
+ WIQ["Work IQ<br/>M365 Signal Correlation"]
+ WEBIQ["Web IQ<br/>Real-Time Web Grounding"]
+ end
+
+ subgraph Agent["Unified Foundry Agent"]
+ UA["Foundry Agent<br/>All Context:<br/>Live + Mirrored + Documents +<br/>Work Signals + Web Intelligence"]
+ MCP_T["Oracle MCP Tool"]
+ ORDS_T["ORDS Tools"]
+ FIQ_T["Fabric IQ Data Agent<br/>(via connector)"]
+ IQ_K["Foundry IQ Knowledge"]
+ WIQ_S["Work IQ Signals"]
+ WEBIQ_T["Web IQ Grounding"]
+ end
+
+ subgraph Publish["Published To"]
+ COP["M365 Copilot"]
+ TEAMS["Teams"]
+ API["API"]
+ STORE["Agent Store"]
+ end
+
+ subgraph Governance["A365 Control Plane"]
+ A365["A365 Admin Center<br/>Unified Agent + IQ Administration"]
+ end
+
+ ORA -->|Live| MCP_T
+ ORA -->|Live| ORDS_T
+ ORA -->|Mirror| MIRROR
+ MIRROR --> MDB
+ MDB --> SC
+ SC --> LH
+ LH --> FIQ
+ FIQ --> FIQ_T
  BLOB --> FOIQ
  SP --> FOIQ
+ FOIQ --> IQ_K
  M365D --> WIQ
- FIQ --> UA
- FOIQ --> UA
- WIQ --> UA
+ WIQ --> WIQ_S
+ WEB --> WEBIQ
+ WEBIQ --> WEBIQ_T
+ MCP_T --> UA
+ ORDS_T --> UA
+ FIQ_T --> UA
+ IQ_K --> UA
+ WIQ_S --> UA
+ WEBIQ_T --> UA
  UA --> COP
  UA --> TEAMS
  UA --> API
+ UA --> STORE
+ A365 -.->|Manage IQ + Agent| UA
 ```
