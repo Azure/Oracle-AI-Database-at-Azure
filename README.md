@@ -1,9 +1,8 @@
 # Oracle AI Database@Azure — AI Adoption Playbook
 
 <p align="center">
-<img width="1536" height="1024" alt="help me integrate this into this image" src="https://github.com/user-attachments/assets/7ebbcd9f-b84e-4190-ba72-a13178085319" />
+  <img width="1536" height="1024" alt="Designer (26)" src="https://github.com/user-attachments/assets/68ad37b7-9ae5-442e-bb3e-1e21973cc7c8" />
 </p>
-
 
 
 ---
